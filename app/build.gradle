@@ -1,0 +1,141 @@
+buildscript {
+    apply from: '../versions.gradle'
+}
+
+plugins {
+    id 'com.android.application'
+    id 'kotlin-android'
+    id 'kotlin-kapt'
+    id 'androidx.navigation.safeargs'
+    id 'kotlin-parcelize'
+
+}
+
+int getBuildNum() {
+    ByteArrayOutputStream stdout = new ByteArrayOutputStream()
+    try {
+        exec {
+            workingDir '.'
+            commandLine "git", "rev-list", "--all", "--count"
+            standardOutput = stdout
+        }
+
+        BufferedReader data = new BufferedReader(new InputStreamReader(new ByteArrayInputStream(stdout.toByteArray())))
+        try {
+            int gitCommitCount = Integer.parseInt(data.readLine())
+            println "Git Commit Count: $gitCommitCount"
+            return gitCommitCount
+        } finally {
+            data.close()
+        }
+    } catch (Exception ex) {
+        throw new GradleException("getBuildNum() - Failed to get git commit count. ", ex)
+    }
+}
+
+android {
+    namespace 'com.azamat.weatherapp'
+    compileSdk 33
+
+    defaultConfig {
+        applicationId "com.azamat.weatherapp"
+        minSdk 21
+        targetSdk 33
+        versionCode getBuildNum()
+        versionName "1.0"
+
+        testInstrumentationRunner "androidx.test.runner.AndroidJUnitRunner"
+        setProperty("archivesBaseName", getAppFileName(versionName, versionCode))
+    }
+
+    buildTypes {
+        release {
+            minifyEnabled false
+            proguardFiles getDefaultProguardFile('proguard-android-optimize.txt'), 'proguard-rules.pro'
+        }
+    }
+    compileOptions {
+        sourceCompatibility JavaVersion.VERSION_1_8
+        targetCompatibility JavaVersion.VERSION_1_8
+    }
+    kotlinOptions {
+        jvmTarget = '1.8'
+    }
+    buildFeatures {
+        viewBinding true
+    }
+    lintOptions {
+        abortOnError false
+    }
+    buildTypes {
+        release {
+            buildConfigField "String", "BASE_URL", '"https://api.openweathermap.org/"'
+            buildConfigField "String", "BASE_ICON_URL", '"https://openweathermap.org/img/wn/"'
+            buildConfigField "String", "WEATHER_ATTRIBUTE", '"/data/2.5/weather"'
+            buildConfigField "String", "CITY_ATTRIBUTE", '"/geo/1.0/direct"'
+            buildConfigField "String", "APP_ID", '"6dc88203afad4109c24beb78db6856a8"'
+        }
+        debug {
+            buildConfigField "String", "BASE_URL", '"https://api.openweathermap.org/"'
+            buildConfigField "String", "BASE_ICON_URL", '"https://openweathermap.org/img/wn/"'
+            buildConfigField "String", "WEATHER_ATTRIBUTE", '"/data/2.5/weather"'
+            buildConfigField "String", "CITY_ATTRIBUTE", '"/geo/1.0/direct"'
+            buildConfigField "String", "APP_ID", '"6dc88203afad4109c24beb78db6856a8"'
+        }
+    }
+    packagingOptions {
+        exclude "**/attach_hotspot_windows.dll"
+        exclude "META-INF/licenses/**"
+        exclude "META-INF/AL2.0"
+        exclude "META-INF/LGPL2.1"
+    }
+}
+
+dependencies {
+
+    //Android Core
+    implementation "androidx.core:core-ktx:$androidx_core_version"
+    implementation "androidx.appcompat:appcompat:$app_compat_version"
+    implementation "com.google.android.material:material:$material_version"
+    implementation "androidx.constraintlayout:constraintlayout:$constraint_layout_version"
+
+    //Koin
+    implementation "io.insert-koin:koin-android:$koin_version"
+    testImplementation "io.insert-koin:koin-test-junit5:$koin_version"
+
+    //Coroutines
+    implementation "org.jetbrains.kotlinx:kotlinx-coroutines-android:$coroutines_version"
+
+    //Navigation Components
+    implementation "androidx.navigation:navigation-fragment-ktx:$nav_version"
+    implementation "androidx.navigation:navigation-ui-ktx:$nav_version"
+
+    //Retrofit & OkHttp
+    implementation "com.squareup.retrofit2:retrofit:$retrofit_version"
+    implementation "com.squareup.retrofit2:converter-gson:$retrofit_gson_version"
+    implementation "com.squareup.okhttp3:okhttp:$okttp_version"
+    implementation "com.squareup.okhttp3:logging-interceptor:$okttp_version"
+
+    //Glide
+    implementation "com.github.bumptech.glide:glide:$glide_version"
+    annotationProcessor "com.github.bumptech.glide:compiler:$glide_version"
+
+    implementation "com.google.android.gms:play-services-location:$play_service_version"
+
+    // Test dependencies
+    testImplementation "junit:junit:$junit_version"
+    androidTestImplementation "androidx.test.ext:junit:$androidx_junit"
+    androidTestImplementation "androidx.test.espresso:espresso-core:$androidx_espresso"
+    testImplementation "org.jetbrains.kotlinx:kotlinx-coroutines-test:$kotlinx_coroutines_test_version"
+    testImplementation "io.mockk:mockk:$mockk_version"
+
+    // AndroidX Test dependencies
+    testImplementation "androidx.arch.core:core-testing:$androidx_core_testing_version"
+    testImplementation "androidx.test:core:$androidx_test_core"
+    testImplementation "androidx.test:runner:$androidx_test_runner"
+    testImplementation "androidx.test:rules:$androidx_test_core"
+}
+
+static def getAppFileName(versionName, versionCode) {
+    return "Weather-app-$versionName-build-$versionCode"
+}

@@ -16,7 +16,7 @@ the Weather app can help you stay on top of the weather conditions in your area.
 
 ## What can be improved?
 
-* Test cases can be added
+* More test cases can be added
 * Does not support local storage.
 * UI can be improved.
 * Entity classes for UI can be separated than the one used for remote calls
